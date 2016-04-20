@@ -1,6 +1,7 @@
 ---
 
-- name: install packages
+- name: install packages (Debian)
+  when: ansible_os_family == 'Debian'
   apt:
     name: gmetad
     state: present
@@ -10,6 +11,12 @@
     - metad
     - install
     - ganglia
+
+- name: install packages (RedHat)
+  when: ansible_os_family == 'RedHat'
+  yum:
+    name: ganglia-gmetad
+    state: present
 
 - name: configure
   template:
@@ -21,6 +28,23 @@
     - metad
     - configure
     - ganglia
+
+- name: fix rrds permissions (RedHat)
+  when: ansible_os_family == 'RedHat'
+  file:
+    path: /var/lib/ganglia/rrds
+    state: directory
+    owner: nobody
+    group: nobody
+    mode: 0755
+    recurse: yes
+  tags:
+    - ganglia_metad_configure
+    - ganglia_metad
+    - metad
+    - configure
+    - ganglia
+
 
 - name: restart gmetad
   service:
